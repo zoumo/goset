@@ -56,7 +56,7 @@ type Set interface {
 	// Elements returns all elements in this set.
 	Elements() []interface{}
 
-	// Containts checks whether the given item is in the set.
+	// Contains checks whether the given item is in the set.
 	Contains(item interface{}) bool
 
 	// Equal checks whether this set is equal to the given one.
