@@ -1,4 +1,9 @@
 # goset
+[![Go Report Card](https://goreportcard.com/badge/github.com/zoumo/goset)](https://goreportcard.com/report/github.com/zoumo/goset)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/zoumo/goset)
+[![Coverage Status](https://coveralls.io/repos/github/zoumo/goset/badge.svg?branch=master)](https://coveralls.io/github/zoumo/goset?branch=master)
+[![Build Status](https://travis-ci.org/zoumo/goset.svg?branch=master)](https://travis-ci.org/zoumo/goset)
+
 
 Set is a useful collection but there is no built-in implementation in Go lang.
 
