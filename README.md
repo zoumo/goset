@@ -33,7 +33,7 @@ So you need to copy your elements from `[]int` to `[]interface` by a loop.
 
 That means you must do this manually every time you want to generate a set from slice.
 
-**That is ugly. So I made this one**
+**That is ugly. So I create this one**
 
 ## Usage
 
