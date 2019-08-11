@@ -25,17 +25,22 @@ type threadSafeSet struct {
 	mu     sync.RWMutex
 }
 
-func newThreadSafeSet() *threadSafeSet {
-	return &threadSafeSet{
+func newThreadSafeSet(elems ...interface{}) *threadSafeSet {
+	s := &threadSafeSet{
 		unsafe: newSet(),
 	}
+	err := s.Add(elems...)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
-func (s *threadSafeSet) Add(elem interface{}) error {
+func (s *threadSafeSet) Add(elems ...interface{}) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.unsafe.Add(elem)
+	return s.unsafe.Add(elems...)
 }
 
 func (s *threadSafeSet) Extend(b interface{}) error {
@@ -45,17 +50,11 @@ func (s *threadSafeSet) Extend(b interface{}) error {
 	return s.unsafe.Extend(b)
 }
 
-func (s *threadSafeSet) Remove(elem interface{}) {
+func (s *threadSafeSet) Remove(elems ...interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.unsafe.Remove(elem)
+	s.unsafe.Remove(elems...)
 
-}
-
-func (s *threadSafeSet) Clear() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.unsafe.Clear()
 }
 
 func (s *threadSafeSet) Copy() Set {
@@ -84,6 +83,19 @@ func (s *threadSafeSet) Contains(elem interface{}) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.unsafe.Contains(elem)
+}
+
+func (s *threadSafeSet) ContainsAll(elems ...interface{}) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.unsafe.ContainsAll(elems...)
+}
+
+func (s *threadSafeSet) ContainsAny(elems ...interface{}) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.unsafe.ContainsAny(elems...)
+
 }
 
 func (s *threadSafeSet) Equal(b Set) bool {

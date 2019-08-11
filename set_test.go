@@ -20,14 +20,6 @@ import (
 	"testing"
 )
 
-func makeSet(i ...interface{}) *set {
-	data := make(map[interface{}]bool)
-	for _, e := range i {
-		data[e] = true
-	}
-	return &set{data: data}
-}
-
 func Test_set_Add(t *testing.T) {
 	s := newSet()
 	type temp struct {
@@ -62,33 +54,6 @@ func Test_set_Add(t *testing.T) {
 	}
 }
 
-func Test_set_Add_raise_error(t *testing.T) {
-	s := newSet()
-
-	RaiseErrAlreadyExisted = true
-	defer func() {
-		RaiseErrAlreadyExisted = false
-	}()
-
-	tests := []struct {
-		name    string
-		elem    interface{}
-		wantErr bool
-	}{
-		{"add nil", nil, false},
-		{"add dup nil", nil, true},
-		{"add float", 10.12, false},
-		{"add dup float", 10.12, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := s.Add(tt.elem); (err != nil) != tt.wantErr {
-				t.Errorf("set.Add() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func Test_set_Extend(t *testing.T) {
 	s := newSet()
 
@@ -97,9 +62,10 @@ func Test_set_Extend(t *testing.T) {
 		b       interface{}
 		wantErr bool
 	}{
-		{"extend slice", []int{1, 2, 3}, false},
+		{"extend int slice", []int{1, 2, 3}, false},
+		{"extend string slice", []string{"1", "2"}, false},
 		{"extend array", [3]int{3, 4, 5}, false},
-		{"extend set", &set{data: map[interface{}]bool{1: true, 2: true, 3: true, 4: true}}, false},
+		{"extend set", newSet(1, 2, 3, 4), false},
 		{"extend err", 1, true},
 		{"extend err", "test", true},
 		{"extend nil", nil, false},
@@ -170,14 +136,14 @@ func Test_set_Equal(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
 			true,
 		},
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 3),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 3),
 			false,
 		},
 	}
@@ -200,20 +166,20 @@ func Test_set_IsSubsetOf(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
 			true,
 		},
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 3),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 3),
 			false,
 		},
 		{
 			"",
-			makeSet(1, 2, 3),
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3),
+			newSet(1, 2, 3, 4),
 			true,
 		},
 	}
@@ -236,20 +202,20 @@ func Test_set_IsSupersetOf(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
 			true,
 		},
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 3),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 3),
 			true,
 		},
 		{
 			"",
-			makeSet(1, 2, 3),
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3),
+			newSet(1, 2, 3, 4),
 			false,
 		},
 	}
@@ -270,7 +236,7 @@ func Test_set_ToThreadUnsafe_And_Safe(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
 			true,
 		},
 	}
@@ -297,21 +263,21 @@ func Test_set_Diff(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2),
-			makeSet(3, 4),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2),
+			newSet(3, 4),
 		},
 		{
 			"",
-			makeSet(1, "2", 3, 4),
-			makeSet(1, 2),
-			makeSet("2", 3, 4),
+			newSet(1, "2", 3, 4),
+			newSet(1, 2),
+			newSet("2", 3, 4),
 		},
 		{
 			"",
-			makeSet(1),
-			makeSet(1, "2", 3, 42),
-			makeSet(),
+			newSet(1),
+			newSet(1, "2", 3, 42),
+			newSet(),
 		},
 	}
 	for _, tt := range tests {
@@ -332,21 +298,21 @@ func Test_set_SymmetricDiff(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
-			makeSet(1, 2, 5),
-			makeSet(3, 4, 5),
+			newSet(1, 2, 3, 4),
+			newSet(1, 2, 5),
+			newSet(3, 4, 5),
 		},
 		{
 			"",
-			makeSet(1, "2", 3, 4),
-			makeSet(1, 2),
-			makeSet(2, "2", 3, 4),
+			newSet(1, "2", 3, 4),
+			newSet(1, 2),
+			newSet(2, "2", 3, 4),
 		},
 		{
 			"",
-			makeSet(1),
-			makeSet(1, "2", 3, 4),
-			makeSet("2", 3, 4),
+			newSet(1),
+			newSet(1, "2", 3, 4),
+			newSet("2", 3, 4),
 		},
 	}
 	for _, tt := range tests {
@@ -367,21 +333,21 @@ func Test_set_Unite(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2),
-			makeSet(2, 3, 4),
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2),
+			newSet(2, 3, 4),
+			newSet(1, 2, 3, 4),
 		},
 		{
 			"",
-			makeSet(1, "2", 3, 4),
-			makeSet(1, 2),
-			makeSet(1, 2, "2", 3, 4),
+			newSet(1, "2", 3, 4),
+			newSet(1, 2),
+			newSet(1, 2, "2", 3, 4),
 		},
 		{
 			"",
-			makeSet(1),
-			makeSet(1, "2", 3, 4),
-			makeSet(1, "2", 3, 4),
+			newSet(1),
+			newSet(1, "2", 3, 4),
+			newSet(1, "2", 3, 4),
 		},
 	}
 	for _, tt := range tests {
@@ -402,21 +368,21 @@ func Test_set_Intersect(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2),
-			makeSet(2, 3, 4),
-			makeSet(2),
+			newSet(1, 2),
+			newSet(2, 3, 4),
+			newSet(2),
 		},
 		{
 			"",
-			makeSet(1, "2", 3, 4),
-			makeSet(1, 2, 3),
-			makeSet(1, 3),
+			newSet(1, "2", 3, 4),
+			newSet(1, 2, 3),
+			newSet(1, 3),
 		},
 		{
 			"",
-			makeSet(1),
-			makeSet(1, "2"),
-			makeSet(1),
+			newSet(1),
+			newSet(1, "2"),
+			newSet(1),
 		},
 	}
 	for _, tt := range tests {
@@ -435,7 +401,7 @@ func Test_set_Range(t *testing.T) {
 	}{
 		{
 			"",
-			makeSet(1, 2, 3, 4),
+			newSet(1, 2, 3, 4),
 		},
 	}
 	for _, tt := range tests {

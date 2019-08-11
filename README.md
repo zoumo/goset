@@ -7,7 +7,7 @@
 
 Set is a useful collection but there is no built-in implementation in Go lang.
 
-## Why use it
+## Why?
 
 The only one pkg which provides set operations now is [golang-set](https://github.com/deckarep/golang-set)
 
@@ -38,7 +38,7 @@ So you need to copy your elements from `[]int` to `[]interface` by a loop.
 
 That means you must do this manually every time you want to generate a set from slice.
 
-**That is ugly. So I create this one**
+**It is ugly. So I create my own set**
 
 ## Usage
 
@@ -46,51 +46,51 @@ That means you must do this manually every time you want to generate a set from 
 import "github.com/zoumo/goset"
 
 func main() {
-	ints := []int{1, 2, 3, 4}
-	floats := []float64{1.0, 2.0, 3.0}
-	strings := []string{"1", "2", "3"}
-	goset.NewSetFrom(ints)
-	goset.NewSafeSetFrom(ints)
-	goset.NewSetFrom(floats)
-	goset.NewSafeSetFrom(floats)
-	goset.NewSetFrom(strings)
-	goset.NewSafeSetFrom(strings)
+	goset.NewSet(1, 2, 3, 4)
+	// or
+	goset.NewSetFrom([]int{1, 2, 3, 4})
+
+	goset.NewSet("1", "2", "3")
+	// or
+	goset.NewSetFrom([]string{"1", "2", "3"})
 }
 ```
 
 Full API
 
 ```go
-// Set provides a collection of oprations for sets
+// Set provides a collection of operations for sets
 //
-// The implementation of Set is base on hash table.
-// So the elements must be hashable. functions, maps,
-// slices are unhashable type, adding these elements
+// The implementation of Set is base on hash table. So the elements must be
+// hashable, functions, maps, slices are unhashable type, adding these elements
 // will cause panic.
 //
 // There are two implementations of Set:
-// 1. default is unsafe based on hash table
-// 2. thread safe based on sync.RWMutex (maybe change to sync.Map in GO1.9)
+// 1. default is unsafe based on hash table(map)
+// 2. thread safe based on sync.RWMutex
 //
-// The two kinds of sets can easily convert to the
-// other one. But you must know exactly what you are doing
-// to avoid the concurrent race
+// The two kinds of sets can easily convert to the other one. But you must know
+// exactly what you are doing to avoid the concurrent race
 type Set interface {
-	// Add adds an element to the set.
-	// If the elem is already exists, it will not return an ErrAlreadyExisted by default.
-	// You can set package level var RaiseErrAlreadyExisted=true to raise it.
-	Add(elem interface{}) error
+	SetToSlice
+	// Add adds all given elements to the set anyway, no matter if it whether already exists.
+	//
+	Add(elem ...interface{}) error
 
 	// Extend adds all elements in the given interface b to this set
-	// the given interface must be array, slice or set.
-	// Extend will ignore elements already existed error.
+	// the given interface must be array, slice or Set.
 	Extend(b interface{}) error
 
-	// Remove removes an element from the set.
-	Remove(elem interface{})
+	// Remove deletes all given elements from the set.
+	Remove(elem ...interface{})
 
-	// Clear removes all elevemnts from the set.
-	Clear()
+	// Contains checks whether the given elem is in the set.
+	Contains(elem interface{}) bool
+
+	// ContainsAll checks whether all the given elems are in the set.
+	ContainsAll(elems ...interface{}) bool
+
+	ContainsAny(elems ...interface{}) bool
 
 	// Copy clones the set.
 	Copy() Set
@@ -98,11 +98,31 @@ type Set interface {
 	// Len returns the size of set. aka Cardinality.
 	Len() int
 
-	// Elements returns all elements in this set.
-	Elements() []interface{}
+	// String returns the string representation of the set.
+	String() string
 
-	// Containts checks whether the given item is in the set.
-	Contains(item interface{}) bool
+	// Range calls f sequentially for each element present in the set.
+	// If f returns false, range stops the iteration.
+	//
+	// Note: the iteration order is not specified and is not guaranteed
+	// to be the same from one iteration to the next. The index only
+	// means how many elements have been visited in the iteration, it not
+	// specifies the index of an element in the set
+	Range(foreach func(index int, elem interface{}) bool)
+
+	// ---------------------------------------------------------------------
+	// Convert
+
+	// ToThreadUnsafe returns a thread unsafe set.
+	// Carefully use the method.
+	ToThreadUnsafe() Set
+
+	// ToThreadSafe returns a thread safe set.
+	// Carefully use the method.
+	ToThreadSafe() Set
+
+	// ---------------------------------------------------------------------
+	// Compare
 
 	// Equal checks whether this set is equal to the given one.
 	// There are two constraints if set a is equal to set b.
@@ -118,26 +138,6 @@ type Set interface {
 	// In other words, all elements in the given set are also the elements
 	// of this set.
 	IsSupersetOf(b Set) bool
-
-	// String returns the string representation of the set.
-	String() string
-
-	// ToThreadUnsafe returns a thread unsafe set.
-	// Carefully use the method.
-	ToThreadUnsafe() Set
-
-	// ToThreadSafe returns a thread safe set.
-	// Carefully use the method.
-	ToThreadSafe() Set
-
-	// Range calls f sequentially for each element present in the set.
-	// If f returns false, range stops the iteration.
-	//
-	// Note: the iteration order is not specified and is not guaranteed
-	// to be the same from one iteration to the next. The index only
-	// means how many elements have been visited in the iteration, it not
-	// specifies the index of an element in the set
-	Range(foreach func(index int, elem interface{}) bool)
 
 	// ---------------------------------------------------------------------
 	// Set Oprations
@@ -159,6 +159,16 @@ type Set interface {
 	// Intersect returns the intersection of two set, aka Intersection Set
 	// math formula: a ∩ b
 	Intersect(b Set) Set
+}
+
+// SetToSlice contains methods that knows how to convert set to slice.
+type SetToSlice interface {
+	// ToStrings returns all string elements in this set.
+	ToStrings() []string
+	// ToInts returns all int elements in this set.
+	ToInts() []int
+	// Elements returns all elements in this set.
+	Elements() []interface{}
 }
 ```
 

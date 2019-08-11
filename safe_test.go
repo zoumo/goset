@@ -21,16 +21,8 @@ import (
 	"testing"
 )
 
-func makeThreadSafeSet(i ...interface{}) *threadSafeSet {
-	data := make(map[interface{}]bool)
-	for _, e := range i {
-		data[e] = true
-	}
-	return &threadSafeSet{unsafe: &set{data: data}}
-}
-
 func Test_ThreadSafeSet_Add(t *testing.T) {
-	s := makeThreadSafeSet()
+	s := newThreadSafeSet()
 	is := []interface{}{1, 2, "3", 4.0, 5.1}
 	var wg sync.WaitGroup
 	for _, i := range is {
@@ -50,7 +42,7 @@ func Test_ThreadSafeSet_Add(t *testing.T) {
 }
 
 func Test_threadSafeSet_Extend(t *testing.T) {
-	s := makeThreadSafeSet()
+	s := newThreadSafeSet()
 	is := []interface{}{
 		[]int{1, 2},
 		[]string{"3", "4"},
@@ -76,7 +68,7 @@ func Test_threadSafeSet_Extend(t *testing.T) {
 }
 
 func Test_threadSafeSet_Remove(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 	is := []interface{}{1, 2, "test", 4}
 
 	var wg sync.WaitGroup
@@ -98,7 +90,7 @@ func Test_threadSafeSet_Remove(t *testing.T) {
 }
 
 func Test_threadSafeSet_Contains(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 	is := []interface{}{1, 2, "3", 4.0, 5.1}
 
 	var wg sync.WaitGroup
@@ -116,7 +108,7 @@ func Test_threadSafeSet_Contains(t *testing.T) {
 }
 
 func Test_threadSafeSet_Equal(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -125,11 +117,11 @@ func Test_threadSafeSet_Equal(t *testing.T) {
 
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
 			true,
 		},
 		{
-			makeThreadSafeSet(1, 2, 3),
+			newThreadSafeSet(1, 2, 3),
 			false,
 		},
 	}
@@ -149,7 +141,7 @@ func Test_threadSafeSet_Equal(t *testing.T) {
 }
 
 func Test_threadSafeSet_IsSubsetOf(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -158,15 +150,15 @@ func Test_threadSafeSet_IsSubsetOf(t *testing.T) {
 
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
 			true,
 		},
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1, "6"),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1, "6"),
 			true,
 		},
 		{
-			makeThreadSafeSet(1, 2, 3),
+			newThreadSafeSet(1, 2, 3),
 			false,
 		},
 	}
@@ -187,7 +179,7 @@ func Test_threadSafeSet_IsSubsetOf(t *testing.T) {
 }
 
 func Test_threadSafeSet_IsSupersetOf(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -196,19 +188,19 @@ func Test_threadSafeSet_IsSupersetOf(t *testing.T) {
 
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
 			true,
 		},
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1, "6"),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1, "6"),
 			false,
 		},
 		{
-			makeThreadSafeSet(1, 2, 3),
+			newThreadSafeSet(1, 2, 3),
 			false,
 		},
 		{
-			makeThreadSafeSet(1, 2),
+			newThreadSafeSet(1, 2),
 			true,
 		},
 	}
@@ -235,7 +227,7 @@ func Test_threadSafeSet_ToThreadUnsafe_And_Safe(t *testing.T) {
 	}{
 		{
 			"",
-			makeThreadSafeSet(1, 2, 3, 4),
+			newThreadSafeSet(1, 2, 3, 4),
 			true,
 		},
 	}
@@ -255,7 +247,7 @@ func Test_threadSafeSet_ToThreadUnsafe_And_Safe(t *testing.T) {
 }
 
 func Test_threadSafeSet_Diff(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -263,12 +255,12 @@ func Test_threadSafeSet_Diff(t *testing.T) {
 	}
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
-			makeThreadSafeSet(),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(),
 		},
 		{
-			makeThreadSafeSet("3", 4.0, 5.1, "6.6"),
-			makeThreadSafeSet(1, 2),
+			newThreadSafeSet("3", 4.0, 5.1, "6.6"),
+			newThreadSafeSet(1, 2),
 		},
 	}
 	var wg sync.WaitGroup
@@ -287,7 +279,7 @@ func Test_threadSafeSet_Diff(t *testing.T) {
 }
 
 func Test_threadSafeSet_SymmetricDiff(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -295,12 +287,12 @@ func Test_threadSafeSet_SymmetricDiff(t *testing.T) {
 	}
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
-			makeThreadSafeSet(),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(),
 		},
 		{
-			makeThreadSafeSet("3", 4.0, 5.1, "6.6"),
-			makeThreadSafeSet(1, 2, "6.6"),
+			newThreadSafeSet("3", 4.0, 5.1, "6.6"),
+			newThreadSafeSet(1, 2, "6.6"),
 		},
 	}
 	var wg sync.WaitGroup
@@ -319,7 +311,7 @@ func Test_threadSafeSet_SymmetricDiff(t *testing.T) {
 }
 
 func Test_threadSafeSet_Unite(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -327,12 +319,12 @@ func Test_threadSafeSet_Unite(t *testing.T) {
 	}
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
 		},
 		{
-			makeThreadSafeSet("3", 4.0, 5.1, "6.6"),
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1, "6.6"),
+			newThreadSafeSet("3", 4.0, 5.1, "6.6"),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1, "6.6"),
 		},
 	}
 	var wg sync.WaitGroup
@@ -348,7 +340,7 @@ func Test_threadSafeSet_Unite(t *testing.T) {
 }
 
 func Test_threadSafeSet_Intersect(t *testing.T) {
-	s := makeThreadSafeSet(1, 2, "3", 4.0, 5.1)
+	s := newThreadSafeSet(1, 2, "3", 4.0, 5.1)
 
 	type test struct {
 		b    *threadSafeSet
@@ -356,12 +348,12 @@ func Test_threadSafeSet_Intersect(t *testing.T) {
 	}
 	tests := []test{
 		{
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
-			makeThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
+			newThreadSafeSet(1, 2, "3", 4.0, 5.1),
 		},
 		{
-			makeThreadSafeSet("3", 4.0, 5.1, "6.6"),
-			makeThreadSafeSet("3", 4.0, 5.1),
+			newThreadSafeSet("3", 4.0, 5.1, "6.6"),
+			newThreadSafeSet("3", 4.0, 5.1),
 		},
 	}
 	var wg sync.WaitGroup

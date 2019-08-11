@@ -18,63 +18,27 @@ package goset
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"reflect"
 )
 
-var (
-	// RaiseErrAlreadyExisted : if true, set will
-	// raise an ErrAlreadyExisted when you attempt
-	// to add an already existed element to the set
-	RaiseErrAlreadyExisted = false
-
-	// ErrAlreadyExisted represents that an element is already existed in the set
-	ErrAlreadyExisted = errors.New("element already exists")
-)
-
 type set struct {
-	// map[interface{}]bool is 2 times faster for add
-	// than map[interface{}]interface{},
-	// and bool occupies only a byte.
-	data map[interface{}]bool
+	typedSetGroup
 }
 
-func newSet() *set {
-	return &set{
-		data: make(map[interface{}]bool),
+func newSet(elems ...interface{}) *set {
+	s := &set{newTypedSetGroup()}
+	err := s.Add(elems...)
+	if err != nil {
+		panic(err)
 	}
-}
-
-func (s *set) Add(elem interface{}) (err error) {
-
-	defer func() {
-		// recover unhashable error
-		if e := recover(); e != nil {
-			err = fmt.Errorf("%v", e)
-		}
-	}()
-
-	_, ok := s.data[elem]
-	if ok {
-		if RaiseErrAlreadyExisted {
-			return ErrAlreadyExisted
-		}
-		return nil
-	}
-
-	s.data[elem] = true
-
-	return nil
+	return s
 }
 
 func (s *set) Extend(b interface{}) error {
-
 	if b == nil {
 		return nil
 	}
-
-	var elements []interface{}
 
 	setb, ok := b.(Set)
 	if !ok {
@@ -82,154 +46,61 @@ func (s *set) Extend(b interface{}) error {
 		for v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
 			v = v.Elem()
 		}
-		switch v.Kind() {
-		case reflect.Array, reflect.Slice:
-			elements = make([]interface{}, 0)
-			for i := 0; i < v.Len(); i++ {
-				vv := v.Index(i)
-				elements = append(elements, vv.Interface())
-			}
-		default:
+		if v.Kind() != reflect.Array && v.Kind() != reflect.Slice {
 			return fmt.Errorf("error extend set with kind: %v, only support array and slice and Set", v.Kind())
 		}
-	} else {
-		elements = setb.Elements()
+		for i := 0; i < v.Len(); i++ {
+			vv := v.Index(i)
+			err := s.Add(vv.Interface())
+			if err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
-	for _, e := range elements {
-		err := s.Add(e)
-		if err != nil && err != ErrAlreadyExisted {
-			return err
-		}
-	}
+	s2 := setb.ToThreadUnsafe().(*set)
+	s2.Range(func(_ int, elem interface{}) bool {
+		s.Add(elem)
+		return true
+	})
 
 	return nil
 }
 
-func (s *set) Remove(elem interface{}) {
-	delete(s.data, elem)
-}
-
-func (s *set) Clear() {
-	s.data = make(map[interface{}]bool)
-}
-
 func (s *set) Copy() Set {
-	c := newSet()
-
-	for k, v := range s.data {
-		// TODO: deep copy
-		c.data[k] = v
+	c := &set{
+		typedSetGroup: s.typedSetGroup.Copy(),
 	}
-
 	return c
 }
 
-func (s *set) Len() int {
-	return len(s.data)
-}
-
-func (s *set) Elements() []interface{} {
-	elems := make([]interface{}, 0, len(s.data))
-	for k := range s.data {
-		elems = append(elems, k)
-	}
-	return elems
-}
-
-func (s *set) Contains(elem interface{}) (ret bool) {
-	defer func() {
-		// recover unhashable error
-		if e := recover(); e != nil {
-			ret = false
-			return
-		}
-	}()
-	_, ok := s.data[elem]
-	return ok
-}
-
 func (s *set) Equal(b Set) bool {
-	b = b.ToThreadUnsafe()
-
-	sLen := s.Len()
-	bLen := b.Len()
-	if sLen != bLen {
-		return false
-	}
-
-	if sLen == 0 {
-		// empty set is always equal to empty set
-		return true
-	}
-
-	for key := range s.data {
-		if !b.Contains(key) {
-			return false
-		}
-	}
-
-	return true
+	s2 := b.ToThreadUnsafe().(*set)
+	return s.typedSetGroup.Equal(s2.typedSetGroup)
 }
 
 func (s *set) IsSubsetOf(b Set) bool {
-	b = b.ToThreadUnsafe()
-
-	sLen := s.Len()
-	bLen := b.Len()
-
-	if sLen > bLen {
-		return false
-	}
-
-	if sLen == 0 {
-		return true
-	}
-
-	for key := range s.data {
-		if !b.Contains(key) {
-			return false
-		}
-	}
-	return true
-
+	s2 := b.ToThreadUnsafe().(*set)
+	return s.typedSetGroup.IsSubsetOf(s2.typedSetGroup)
 }
 
 func (s *set) IsSupersetOf(b Set) bool {
-	b = b.ToThreadUnsafe()
-
-	sLen := s.Len()
-	bLen := b.Len()
-
-	if sLen < bLen {
-		return false
-	}
-
-	if bLen == 0 {
-		return true
-	}
-
-	for _, e := range b.Elements() {
-		if !s.Contains(e) {
-			return false
-		}
-	}
-	return true
-
+	s2 := b.ToThreadUnsafe().(*set)
+	return s2.typedSetGroup.IsSubsetOf(s.typedSetGroup)
 }
 
 func (s *set) String() string {
 	buf := bytes.Buffer{}
 	buf.WriteString("Set[")
-	first := true
-	for key := range s.data {
-		if first {
-			buf.WriteString(fmt.Sprintf("%+v", key))
-			first = false
+	s.Range(func(i int, elem interface{}) bool {
+		if i == 0 {
+			buf.WriteString(fmt.Sprintf("%+v", elem))
 		} else {
-			buf.WriteString(fmt.Sprintf(" %+v", key))
+			buf.WriteString(fmt.Sprintf(" %+v", elem))
 		}
-	}
+		return true
+	})
 	buf.WriteString("]")
 	return buf.String()
 }
@@ -240,66 +111,36 @@ func (s *set) ToThreadUnsafe() Set {
 
 func (s *set) ToThreadSafe() Set {
 	return &threadSafeSet{unsafe: s}
-
 }
 
 func (s *set) Diff(b Set) Set {
-	b = b.ToThreadUnsafe()
-	diff := newSet()
-	for key := range s.data {
-		if !b.Contains(key) {
-			diff.data[key] = true
-		}
+	s2 := b.ToThreadUnsafe().(*set)
+	diff := &set{
+		typedSetGroup: s.typedSetGroup.Diff(s2.typedSetGroup),
 	}
 	return diff
 }
 
 func (s *set) SymmetricDiff(b Set) Set {
-	b = b.ToThreadUnsafe()
-	adiff := s.Diff(b)
-	bdiff := b.Diff(s)
-	return adiff.Unite(bdiff)
+	s2 := b.ToThreadUnsafe().(*set)
+	diff := &set{
+		typedSetGroup: s.typedSetGroup.SymmetricDiff(s2.typedSetGroup),
+	}
+	return diff
 }
 
 func (s *set) Unite(b Set) Set {
-	b = b.ToThreadUnsafe()
-	union := s.Copy()
-	for _, e := range b.Elements() {
-		union.Add(e)
+	s2 := b.ToThreadUnsafe().(*set)
+	union := &set{
+		typedSetGroup: s.typedSetGroup.Unite(s2.typedSetGroup),
 	}
 	return union
-
 }
 
 func (s *set) Intersect(b Set) Set {
-	c := (b.ToThreadUnsafe()).(*set)
-
-	var x, y *set
-
-	// find the smaller one
-	if s.Len() <= c.Len() {
-		x = s
-		y = c
-	} else {
-		x = c
-		y = s
-	}
-
-	intersection := newSet()
-	for key := range x.data {
-		if y.Contains(key) {
-			intersection.Add(key)
-		}
+	s2 := b.ToThreadUnsafe().(*set)
+	intersection := &set{
+		typedSetGroup: s.typedSetGroup.Intersect(s2.typedSetGroup),
 	}
 	return intersection
-}
-
-func (s *set) Range(foreach func(int, interface{}) bool) {
-	i := 0
-	for key := range s.data {
-		if !foreach(i, key) {
-			break
-		}
-		i++
-	}
 }

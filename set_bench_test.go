@@ -17,7 +17,7 @@ limitations under the License.
 package goset
 
 import (
-	"math/rand"
+	"strconv"
 	"testing"
 )
 
@@ -33,58 +33,48 @@ import (
 // s.Unit(b) depends on len(s) + len(b)
 // s.Intersect(b) depends on min(len(s), len(b))
 
-func benchmarkAdd(b *testing.B, s Set, clear bool) {
+func fill(s Set, scal int) {
+	for i := 0; i < scal; i++ {
+		s.Add(i)
+		s.Add(strconv.Itoa(i))
+		s.Add(float64(i))
+	}
+}
+
+func benchmarkAdd(b *testing.B, s Set) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s.Add(i)
-		if clear {
-			s.Clear()
-		}
+		s.Add(strconv.Itoa(i))
+		s.Add(float64(i))
 	}
 }
-func BenchmarkUnsafeAddWithClear(b *testing.B) {
-	benchmarkAdd(b, makeSet(), true)
+
+func BenchmarkUnsafeAdd(b *testing.B) {
+	benchmarkAdd(b, newSet())
 }
 
-func BenchmarkSafeAddWithClear(b *testing.B) {
-	benchmarkAdd(b, makeThreadSafeSet(), true)
+func BenchmarkSafeAdd(b *testing.B) {
+	benchmarkAdd(b, newThreadSafeSet())
 }
 
-func BenchmarkUnsafeAddWithoutClear(b *testing.B) {
-	benchmarkAdd(b, makeSet(), false)
-}
-
-func BenchmarkSafeAddWithoutClear(b *testing.B) {
-	benchmarkAdd(b, makeThreadSafeSet(), false)
-}
-
-func benchmarkExtend(b *testing.B, s Set, clear bool) {
+func benchmarkExtend(b *testing.B, s Set) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		s.Extend([]int{i})
-		if clear {
-			s.Clear()
-		}
+		s.Extend([]interface{}{i, strconv.Itoa(i)})
 	}
 }
 
-func BenchmarkUnSafeExtendWithClear(b *testing.B) {
-	benchmarkExtend(b, makeSet(), true)
-}
-func BenchmarkSafeExtendWithClear(b *testing.B) {
-	benchmarkExtend(b, makeThreadSafeSet(), true)
+func BenchmarkUnSafeExtend(b *testing.B) {
+	benchmarkExtend(b, newSet())
 }
 
-func BenchmarkUnSafeExtendWithoutClear(b *testing.B) {
-	benchmarkExtend(b, makeSet(), false)
-}
-
-func BenchmarkSafeExtendWithoutClear(b *testing.B) {
-	benchmarkExtend(b, makeThreadSafeSet(), false)
+func BenchmarkSafeExtend(b *testing.B) {
+	benchmarkExtend(b, newThreadSafeSet())
 }
 
 func benchmarkCopy(b *testing.B, s Set, scale int) {
-	s.Extend(rand.Perm(scale))
+	fill(s, scale)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s.Copy()
@@ -92,31 +82,31 @@ func benchmarkCopy(b *testing.B, s Set, scale int) {
 }
 
 func BenchmarkUnsafeCopy1(b *testing.B) {
-	benchmarkCopy(b, makeSet(), 1)
+	benchmarkCopy(b, newSet(), 1)
 }
 
-func BenchmarkSfaeCopy1(b *testing.B) {
-	benchmarkCopy(b, makeThreadSafeSet(), 1)
+func BenchmarkSafeCopy1(b *testing.B) {
+	benchmarkCopy(b, newThreadSafeSet(), 1)
 }
 
 func BenchmarkUnsafeCopy10(b *testing.B) {
-	benchmarkCopy(b, makeSet(), 10)
+	benchmarkCopy(b, newSet(), 10)
 }
 
-func BenchmarkSfaeCopy10(b *testing.B) {
-	benchmarkCopy(b, makeThreadSafeSet(), 10)
+func BenchmarkSafeCopy10(b *testing.B) {
+	benchmarkCopy(b, newThreadSafeSet(), 10)
 }
 
 func BenchmarkUnsafeCopy100(b *testing.B) {
-	benchmarkCopy(b, makeSet(), 100)
+	benchmarkCopy(b, newSet(), 100)
 }
 
-func BenchmarkSfaeCopy100(b *testing.B) {
-	benchmarkCopy(b, makeThreadSafeSet(), 100)
+func BenchmarkSafeCopy100(b *testing.B) {
+	benchmarkCopy(b, newThreadSafeSet(), 100)
 }
 
 func benchmarkLen(b *testing.B, s Set) {
-	s.Extend(rand.Perm(1000))
+	fill(s, 1000)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s.Len()
@@ -124,14 +114,14 @@ func benchmarkLen(b *testing.B, s Set) {
 }
 
 func BenchmarkUnsafeLen(b *testing.B) {
-	benchmarkLen(b, makeSet())
+	benchmarkLen(b, newSet())
 }
 func BenchmarkSafeLen(b *testing.B) {
-	benchmarkLen(b, makeThreadSafeSet())
+	benchmarkLen(b, newThreadSafeSet())
 }
 
 func benchmarkContains(b *testing.B, s Set) {
-	s.Extend(rand.Perm(100))
+	fill(s, 100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		s.Contains(i)
@@ -139,17 +129,16 @@ func benchmarkContains(b *testing.B, s Set) {
 }
 
 func BenchmarkUnsafeContains(b *testing.B) {
-	benchmarkContains(b, makeSet())
+	benchmarkContains(b, newSet())
 }
 
 func BenchmarkSafeContains(b *testing.B) {
-	benchmarkContains(b, makeThreadSafeSet())
+	benchmarkContains(b, newThreadSafeSet())
 }
 
 func benchmarkEqual(b *testing.B, x Set, y Set, scale int) {
-	ints := rand.Perm(scale)
-	x.Extend(ints)
-	y.Extend(ints)
+	fill(x, scale)
+	fill(y, scale)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		x.Equal(y)
@@ -157,17 +146,35 @@ func benchmarkEqual(b *testing.B, x Set, y Set, scale int) {
 }
 
 func BenchmarkUnsafeEqual1(b *testing.B) {
-	benchmarkEqual(b, makeSet(), makeSet(), 1)
+	benchmarkEqual(b, newSet(), newSet(), 1)
 }
 
 func BenchmarkSafeEqual1(b *testing.B) {
-	benchmarkEqual(b, makeThreadSafeSet(), makeThreadSafeSet(), 1)
+	benchmarkEqual(b, newThreadSafeSet(), newThreadSafeSet(), 1)
 }
 
-func BenchmarkUnsafeEqual10(b *testing.B) {
-	benchmarkEqual(b, makeSet(), makeSet(), 10)
+func BenchmarkUnsafeEqual11(b *testing.B) {
+	benchmarkEqual(b, newSet(), newSet(), 10)
 }
 
 func BenchmarkSafeEqual10(b *testing.B) {
-	benchmarkEqual(b, makeThreadSafeSet(), makeThreadSafeSet(), 10)
+	benchmarkEqual(b, newThreadSafeSet(), newThreadSafeSet(), 10)
+}
+
+func benchmarkRange(b *testing.B, s Set, scale int) {
+	fill(s, scale)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		s.Range(func(_ int, elem interface{}) bool {
+			return true
+		})
+	}
+}
+
+func BenchmarkUnsafeRange10(b *testing.B) {
+	benchmarkRange(b, newSet(), 10)
+}
+
+func BenchmarkSafeRange10(b *testing.B) {
+	benchmarkRange(b, newThreadSafeSet(), 10)
 }

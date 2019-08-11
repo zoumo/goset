@@ -1,4 +1,3 @@
-
 # Created by https://www.gitignore.io/api/go
 
 ### Go ###
@@ -16,5 +15,6 @@
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+.vscode
 
 # End of https://www.gitignore.io/api/go
