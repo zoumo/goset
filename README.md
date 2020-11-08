@@ -140,7 +140,7 @@ type Set interface {
 	IsSupersetOf(b Set) bool
 
 	// ---------------------------------------------------------------------
-	// Set Oprations
+	// Set Operations
 
 	// Diff returns the difference between the set and this given
 	// one, aka Difference Set
