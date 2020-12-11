@@ -61,7 +61,7 @@ func (s *set) Extend(b interface{}) error {
 
 	s2 := setb.ToThreadUnsafe().(*set)
 	s2.Range(func(_ int, elem interface{}) bool {
-		s.Add(elem)
+		s.Add(elem) //nolint:errcheck
 		return true
 	})
 

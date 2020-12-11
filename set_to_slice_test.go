@@ -30,7 +30,8 @@ func Test_set_ToStrings(t *testing.T) {
 	}{
 		{"", newSet(1, 2, "str", "str1"), []string{"str", "str1"}},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.s.ToStrings()
 			sort.Strings(got)
@@ -50,7 +51,8 @@ func Test_set_ToInts(t *testing.T) {
 	}{
 		{"", newSet(1, 2, "str", "str1"), []int{1, 2}},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.s.ToInts()
 			sort.Ints(got)

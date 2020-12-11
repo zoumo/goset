@@ -54,7 +54,6 @@ func (s *threadSafeSet) Remove(elems ...interface{}) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.unsafe.Remove(elems...)
-
 }
 
 func (s *threadSafeSet) Copy() Set {
@@ -63,7 +62,6 @@ func (s *threadSafeSet) Copy() Set {
 	return &threadSafeSet{
 		unsafe: (s.unsafe.Copy()).(*set),
 	}
-
 }
 
 func (s *threadSafeSet) Len() int {
@@ -95,11 +93,9 @@ func (s *threadSafeSet) ContainsAny(elems ...interface{}) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.unsafe.ContainsAny(elems...)
-
 }
 
 func (s *threadSafeSet) Equal(b Set) bool {
-
 	safeb, ok := b.(*threadSafeSet)
 	if ok {
 		safeb.mu.RLock()
@@ -122,7 +118,6 @@ func (s *threadSafeSet) IsSubsetOf(b Set) bool {
 	defer s.mu.RUnlock()
 
 	return s.unsafe.IsSubsetOf(b)
-
 }
 
 func (s *threadSafeSet) IsSupersetOf(b Set) bool {
@@ -135,7 +130,6 @@ func (s *threadSafeSet) IsSupersetOf(b Set) bool {
 	defer s.mu.RUnlock()
 
 	return s.unsafe.IsSupersetOf(b)
-
 }
 
 func (s *threadSafeSet) String() string {
@@ -151,7 +145,6 @@ func (s *threadSafeSet) ToThreadUnsafe() Set {
 
 func (s *threadSafeSet) ToThreadSafe() Set {
 	return s
-
 }
 
 func (s *threadSafeSet) Diff(b Set) Set {

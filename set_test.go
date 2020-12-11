@@ -22,9 +22,11 @@ import (
 
 func Test_set_Add(t *testing.T) {
 	s := newSet()
+	//nolint
 	type temp struct {
 		test int
 	}
+	//nolint
 	type temp2 struct {
 		test int
 		m    map[string]int
@@ -45,7 +47,8 @@ func Test_set_Add(t *testing.T) {
 		{"add slice error", []int{1, 2, 3}, true},
 		{"add map error", map[string]int{"1": 2}, true},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if err := s.Add(tt.elem); (err != nil) != tt.wantErr {
 				t.Errorf("set.Add() error = %v, wantErr %v", err, tt.wantErr)
@@ -70,7 +73,8 @@ func Test_set_Extend(t *testing.T) {
 		{"extend err", "test", true},
 		{"extend nil", nil, false},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if err := s.Extend(tt.b); (err != nil) != tt.wantErr {
 				t.Errorf("set.Extend() error = %v, wantErr %v", err, tt.wantErr)
@@ -92,7 +96,8 @@ func Test_set_Remove(t *testing.T) {
 		{"remove float", 3.0},
 		{"remove missing", 1},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			s.Remove(tt.elem)
 			if s.Contains(tt.elem) != false {
@@ -117,7 +122,8 @@ func Test_set_Contains(t *testing.T) {
 		{"contains missing", 3, false},
 		{"contains missing", []int{1, 2, 3}, false},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := s.Contains(tt.elem); got != tt.want {
 				t.Errorf("set.Contains() = %v, want %v", got, tt.want)
@@ -127,7 +133,6 @@ func Test_set_Contains(t *testing.T) {
 }
 
 func Test_set_Equal(t *testing.T) {
-
 	tests := []struct {
 		name string
 		a    *set
@@ -147,7 +152,8 @@ func Test_set_Equal(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.Equal(tt.b); got != tt.want {
 				t.Errorf("set.Equal() = %v, want %v", got, tt.want)
@@ -157,7 +163,6 @@ func Test_set_Equal(t *testing.T) {
 }
 
 func Test_set_IsSubsetOf(t *testing.T) {
-
 	tests := []struct {
 		name string
 		a    Set
@@ -183,7 +188,8 @@ func Test_set_IsSubsetOf(t *testing.T) {
 			true,
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.IsSubsetOf(tt.b); got != tt.want {
 				t.Errorf("set.IsSubsetOf() = %v, want %v", got, tt.want)
@@ -193,7 +199,6 @@ func Test_set_IsSubsetOf(t *testing.T) {
 }
 
 func Test_set_IsSupersetOf(t *testing.T) {
-
 	tests := []struct {
 		name string
 		a    Set
@@ -219,7 +224,8 @@ func Test_set_IsSupersetOf(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.IsSupersetOf(tt.b); got != tt.want {
 				t.Errorf("set.IsSupersetOf() = %v, want %v", got, tt.want)
@@ -240,7 +246,8 @@ func Test_set_ToThreadUnsafe_And_Safe(t *testing.T) {
 			true,
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			unsafe := tt.a.ToThreadUnsafe()
 			if _, got := unsafe.(*set); got != tt.want {
@@ -280,7 +287,8 @@ func Test_set_Diff(t *testing.T) {
 			newSet(),
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.Diff(tt.b); !got.Equal(tt.want) {
 				t.Errorf("set.Diff() = %v, want %v", got, tt.want)
@@ -315,7 +323,8 @@ func Test_set_SymmetricDiff(t *testing.T) {
 			newSet("2", 3, 4),
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.SymmetricDiff(tt.b); !got.Equal(tt.want) {
 				t.Errorf("set.SymmetricDiff() = %v, want %v", got, tt.want)
@@ -350,7 +359,8 @@ func Test_set_Unite(t *testing.T) {
 			newSet(1, "2", 3, 4),
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.Unite(tt.b); !got.Equal(tt.want) {
 				t.Errorf("set.Unite() = %v, want %v", got, tt.want)
@@ -385,7 +395,8 @@ func Test_set_Intersect(t *testing.T) {
 			newSet(1),
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.a.Intersect(tt.b); !got.Equal(tt.want) {
 				t.Errorf("set.Intersect() = %v, want %v", got, tt.want)
@@ -404,7 +415,8 @@ func Test_set_Range(t *testing.T) {
 			newSet(1, 2, 3, 4),
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			seen := make([]interface{}, 0, tt.a.Len())
 			tt.a.Range(func(index int, elem interface{}) bool {

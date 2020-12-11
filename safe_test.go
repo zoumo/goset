@@ -126,13 +126,13 @@ func Test_threadSafeSet_Equal(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()
 			if got := s.Equal(tt.b); got != tt.want {
 				t.Errorf("threadSafeSet.Equal() == %v, want %v", got, tt.b)
-
 			}
 		}(tt)
 	}
@@ -163,19 +163,18 @@ func Test_threadSafeSet_IsSubsetOf(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()
 			if got := s.IsSubsetOf(tt.b); got != tt.want {
 				t.Errorf("threadSafeSet.IsSubsetOf() == %v, want %v", got, tt.b)
-
 			}
 		}(tt)
 	}
 
 	wg.Wait()
-
 }
 
 func Test_threadSafeSet_IsSupersetOf(t *testing.T) {
@@ -205,13 +204,13 @@ func Test_threadSafeSet_IsSupersetOf(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()
 			if got := s.IsSupersetOf(tt.b); got != tt.want {
 				t.Errorf("threadSafeSet.IsSupersetOf() == %v, want %v", got, tt.want)
-
 			}
 		}(tt)
 	}
@@ -231,7 +230,8 @@ func Test_threadSafeSet_ToThreadUnsafe_And_Safe(t *testing.T) {
 			true,
 		},
 	}
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			unsafe := tt.a.ToThreadUnsafe()
 			if _, got := unsafe.(*set); got != tt.want {
@@ -242,7 +242,6 @@ func Test_threadSafeSet_ToThreadUnsafe_And_Safe(t *testing.T) {
 				t.Errorf("threadSafeSet.ToThreadUnsafe() = %v, want %v", got, tt.want)
 			}
 		})
-
 	}
 }
 
@@ -264,7 +263,8 @@ func Test_threadSafeSet_Diff(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()
@@ -275,7 +275,6 @@ func Test_threadSafeSet_Diff(t *testing.T) {
 	}
 
 	wg.Wait()
-
 }
 
 func Test_threadSafeSet_SymmetricDiff(t *testing.T) {
@@ -296,7 +295,8 @@ func Test_threadSafeSet_SymmetricDiff(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()
@@ -307,7 +307,6 @@ func Test_threadSafeSet_SymmetricDiff(t *testing.T) {
 	}
 
 	wg.Wait()
-
 }
 
 func Test_threadSafeSet_Unite(t *testing.T) {
@@ -328,7 +327,8 @@ func Test_threadSafeSet_Unite(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()
@@ -357,7 +357,8 @@ func Test_threadSafeSet_Intersect(t *testing.T) {
 		},
 	}
 	var wg sync.WaitGroup
-	for _, tt := range tests {
+	for i := range tests {
+		tt := tests[i]
 		wg.Add(1)
 		go func(tt test) {
 			defer wg.Done()

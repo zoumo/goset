@@ -18,7 +18,6 @@ package goset
 
 import (
 	"fmt"
-	"sync"
 	"sync/atomic"
 )
 
@@ -108,17 +107,17 @@ func typedAssert(elem interface{}) typed {
 	return typedAny
 }
 
-func concurrent(f func(typed)) {
-	wg := sync.WaitGroup{}
-	for _, t := range allTyped {
-		wg.Add(1)
-		go func(t typed) {
-			defer wg.Done()
-			f(t)
-		}(t)
-	}
-	wg.Wait()
-}
+// func concurrent(f func(typed)) {
+// 	wg := sync.WaitGroup{}
+// 	for _, t := range allTyped {
+// 		wg.Add(1)
+// 		go func(t typed) {
+// 			defer wg.Done()
+// 			f(t)
+// 		}(t)
+// 	}
+// 	wg.Wait()
+// }
 
 func synchronous(f func(typed)) {
 	for _, t := range allTyped {
@@ -136,7 +135,7 @@ func newTypedSetGroup(elems ...interface{}) typedSetGroup {
 	s.store(typedString, newStrings())
 	s.store(typedAny, newAny())
 
-	s.Add(elems...)
+	s.Add(elems...) //nolint:errcheck
 	return s
 }
 
@@ -145,8 +144,7 @@ func (s typedSetGroup) store(t typed, in typedSet) {
 }
 
 func (s typedSetGroup) load(t typed) typedSet {
-	v, _ := s[t]
-	return v.(typedSet)
+	return s[t].(typedSet)
 }
 
 func (s typedSetGroup) typedSetFor(elem interface{}) typedSet {
